@@ -44,6 +44,22 @@ class Game:
     def draw(self, p: Pixel):
         pygame.draw.rect(self.screen, p.color, p.rect)
 
+    def update_display(self):
+        # erase old screen
+        self.screen.fill((0, 0, 0))
+
+        # draw pixels
+        for pixel in self.pixels:
+            self.draw(p=pixel)
+
+        # draw display text
+        font = pygame.font.Font(None, 30)
+        text_display = font.render("Frame: {}".format(self.frame), True, (255, 255, 255))
+        self.screen.blit(text_display, (0, 0))
+
+        # update display
+        pygame.display.flip()
+
     def run(self):
         while self.frame < 1000:
             # increment frame
@@ -52,10 +68,7 @@ class Game:
             # pixel actions
 
             # display
-            self.screen.fill((0, 0, 0))
-            for pixel in self.pixels:
-                self.draw(p=pixel)
-            pygame.display.flip()
+            self.update_display()
 
             # sleep
             sleep(1 / self.fps_limit)
