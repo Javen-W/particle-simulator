@@ -26,8 +26,10 @@ class Pixel:
     def move(self, angle, speed):
         dx = math.sin(angle) * speed
         dy = -math.cos(angle) * speed
-        self.rect = self.rect.move(x=dx, y=dy)
-
+        old_rect = self.rect
+        self.rect = self.rect.move(dx, dy)
+        print("moved pixel; old: {}, new: {}".format( (old_rect.x, old_rect.y ), (self.rect.x, self.rect.y)))
+        print("dx: {}, dy: {}\n".format(dx, dy))
 
 class Game:
     def __init__(self):
@@ -61,11 +63,23 @@ class Game:
         pygame.display.flip()
 
     def run(self):
+        # todo temp random particles
+        for _ in range(30):
+            x, y = random.randint(0, self.screen_dimensions[0]), random.randint(0, self.screen_dimensions[0])
+            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size)
+            self.pixels.append(p)
+
         while self.frame < 1000:
             # increment frame
             self.frame += 1
 
             # pixel actions
+            # TODO temp random movement
+            for pixel in self.pixels:
+                speed = random.random() * self.pixel_size
+                angle = random.uniform(0, 2 * math.pi)
+                pixel.move(angle=angle, speed=speed)
 
             # display
             self.update_display()
