@@ -18,6 +18,16 @@ class Pixel:
             width, height
         )
 
+    """
+    Moves the pixel by a given velocity vector (i.e., angle and speed).
+        Angle: the vector direction represented in radians
+        Speed: the vector magnitude represented in speed
+    """
+    def move(self, angle, speed):
+        dx = math.sin(angle) * speed
+        dy = -math.cos(angle) * speed
+        self.rect = self.rect.move(x=dx, y=dy)
+
 
 class Game:
     def __init__(self):
