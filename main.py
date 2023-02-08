@@ -34,6 +34,7 @@ class Game:
         # game constants
         self.screen_dimensions = 600, 600
         self.pixel_size = 30
+        self.fps_limit = 15
 
         # game vars
         self.screen = pygame.display.set_mode(self.screen_dimensions)
@@ -44,7 +45,7 @@ class Game:
         pygame.draw.rect(self.screen, p.color, p.rect)
 
     def run(self):
-        while True:
+        while self.frame < 1000:
             # increment frame
             self.frame += 1
 
@@ -55,6 +56,9 @@ class Game:
             for pixel in self.pixels:
                 self.draw(p=pixel)
             pygame.display.flip()
+
+            # sleep
+            sleep(1 / self.fps_limit)
 
 
 # start game
