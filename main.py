@@ -34,12 +34,30 @@ class Game:
         # game constants
         self.screen_dimensions = 600, 600
         self.pixel_size = 30
+
+        # game vars
         self.screen = pygame.display.set_mode(self.screen_dimensions)
+        self.frame = 0
+        self.pixels = []
 
     def draw(self, p: Pixel):
         pygame.draw.rect(self.screen, p.color, p.rect)
+
+    def run(self):
+        while True:
+            # increment frame
+            self.frame += 1
+
+            # pixel actions
+
+            # display
+            self.screen.fill((0, 0, 0))
+            for pixel in self.pixels:
+                self.draw(p=pixel)
+            pygame.display.flip()
 
 
 # start game
 if __name__ == '__main__':
     game = Game()
+    game.run()
