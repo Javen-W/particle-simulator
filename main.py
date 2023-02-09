@@ -25,7 +25,7 @@ class Vector:
 
 
 class Pixel:
-    def __init__(self, color, x, y, width, height, angle, speed):
+    def __init__(self, color, x: int, y: int, width: int, height: int, velocity: Vector):
         self.color = color
         self.rect = pygame.Rect(
             x, y,
@@ -33,12 +33,13 @@ class Pixel:
         )
         self.width = width
         self.height = height
-        self.angle = angle
-        self.speed = speed
+        self.velocity = velocity
 
-    def move(self):
-        dx = math.sin(self.angle) * self.speed
-        dy = -math.cos(self.angle) * self.speed
+    def move(self, v: Vector = None):
+        if v:
+            self.velocity = Vector.add_vectors(self.velocity, v)
+        dx = math.sin(self.velocity.direction) * self.velocity.magnitude
+        dy = -math.cos(self.velocity.direction) * self.velocity.magnitude
         self.rect = self.rect.move(dx, dy)
 
 
@@ -48,6 +49,7 @@ class Game:
         self.screen_dimensions = 600, 600
         self.pixel_size = 30
         self.fps_limit = 15
+        self.gravity = Vector(magnitude=0.002, direction=math.pi)
 
         # game vars
         self.screen = pygame.display.set_mode(self.screen_dimensions)
@@ -75,23 +77,22 @@ class Game:
 
     def move_pixel(self, p: Pixel):
         # initial movement
-        p.move()
+        p.move(v=self.gravity)
 
         # check for collisions
         if p.rect.x >= self.screen_dimensions[0] - p.width or p.rect.x <= 0:
-            p.angle = -p.angle
+            p.velocity.direction = -p.velocity.direction
 
         if p.rect.y >= self.screen_dimensions[1] - p.height or p.rect.y <= 0:
-            p.angle = math.pi - p.angle
+            p.velocity.direction = math.pi - p.velocity.direction
 
     def run(self):
         # todo temp random particles
         for _ in range(50):
             x, y = random.randint(50, 500), random.randint(50, 500)
             color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            speed = random.random() * self.pixel_size
-            angle = random.uniform(0, 2 * math.pi)
-            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, angle=angle, speed=speed)
+            velocity = Vector(magnitude=random.random() * self.pixel_size, direction=random.uniform(0, 2 * math.pi))
+            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, velocity=velocity)
             self.pixels.append(p)
 
         while self.frame < 1000:
