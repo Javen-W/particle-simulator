@@ -1,7 +1,4 @@
 import math
-import multiprocessing
-import os
-import time
 from time import sleep
 import pygame
 import random
@@ -25,14 +22,13 @@ class Vector:
 
 
 class Pixel:
-    def __init__(self, color, x: int, y: int, width: int, height: int, velocity: Vector):
+    def __init__(self, color, x: int, y: int, size: int, velocity: Vector):
         self.color = color
         self.rect = pygame.Rect(
             x, y,
-            width, height
+            size, size
         )
-        self.width = width
-        self.height = height
+        self.size = size
         self.velocity = velocity
 
     def move(self, v: Vector = None):
@@ -59,11 +55,11 @@ class Game:
         self.pixels = []
 
         # todo temp random particles
-        for _ in range(50):
+        for _ in range(30):
             x, y = random.randint(50, 500), random.randint(50, 500)
             color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             velocity = Vector(magnitude=random.random() * self.pixel_size, direction=random.uniform(0, 2 * math.pi))
-            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, velocity=velocity)
+            p = Pixel(color=color, x=x, y=y, size=self.pixel_size, velocity=velocity)
             self.pixels.append(p)
 
     def draw(self, p: Pixel):
@@ -85,15 +81,17 @@ class Game:
         # update display
         pygame.display.flip()
 
-    def move_pixel(self, p: Pixel):
-        # initial movement
+    def move_pixel(self, p: Pixel, p_index: int):
+        # apply gravity
         p.move(v=self.gravity)
+
+        # apply air drag
         p.velocity.magnitude *= self.drag
 
         # check for wall collisions
-        if p.rect.x > self.screen_dimensions[0] - p.width:
+        if p.rect.x > self.screen_dimensions[0] - p.size:
             # right wall
-            p.rect.x = 2 * (self.screen_dimensions[0] - p.width) - p.rect.x
+            p.rect.x = 2 * (self.screen_dimensions[0] - p.size) - p.rect.x
             p.velocity.direction = -p.velocity.direction
             p.velocity.magnitude *= self.elasticity
         elif p.rect.x < 0:
@@ -102,20 +100,51 @@ class Game:
             p.velocity.direction = -p.velocity.direction
             p.velocity.magnitude *= self.elasticity
 
-        if p.rect.y > self.screen_dimensions[1] - p.height:
+        if p.rect.y > self.screen_dimensions[1] - p.size:
             # floor
-            p.rect.y = self.screen_dimensions[1] - p.height
+            p.rect.y = self.screen_dimensions[1] - p.size
             p.velocity.direction = math.pi - p.velocity.direction
             p.velocity.magnitude *= self.elasticity
         elif p.rect.y < 0:
             # ceiling
-            p.rect.y = p.height
+            p.rect.y = p.size
             p.velocity.direction = math.pi - p.velocity.direction
             p.velocity.magnitude *= self.elasticity
 
+        # check for other particle collisions
+        for other_p in self.pixels[p_index+1:]:
+            dx = p.rect.x - other_p.rect.x
+            dy = p.rect.y - other_p.rect.y
+            distance = math.hypot(dx, dy)
+
+            if distance <= p.size:
+                print("frame ({}): collision with distance {}".format(self.frame, distance))
+
+                # reflect the particle angles
+                tangent = math.atan2(dy, dx)
+                p.velocity.direction = 2 * tangent - p.velocity.direction
+                other_p.velocity.direction = 2 * tangent - other_p.velocity.direction
+
+                # force the particle out of overlap
+                angle = 0.5 * math.pi + tangent
+                # dx = math.sin(angle) * (p.size - distance)
+                # dy = math.cos(angle) * (p.size - distance)
+                dx = math.sin(angle)
+                dy = math.cos(angle)
+                p.rect.x += dx
+                p.rect.y -= dy
+                print("tangent={}, angle={}, dx={}, -dy={}".format(tangent, angle, math.sin(angle), math.cos(angle)))
+                other_p.rect.x -= dx
+                other_p.rect.y += dy
+
+                # the particles exchange energy
+                (p.velocity.magnitude, other_p.velocity.magnitude) = (other_p.velocity.magnitude, p.velocity.magnitude)
+                p.velocity.magnitude *= self.elasticity
+                other_p.velocity.magnitude *= self.elasticity
+
     def find_pixel(self, x: int, y: int):
         for p in self.pixels:
-            if math.hypot(p.rect.x - x, p.rect.y - y) <= p.width:
+            if math.hypot(p.rect.x - x, p.rect.y - y) <= p.size:
                 return p
         return None
 
@@ -138,9 +167,9 @@ class Game:
             # pixel actions
             if selected_pixel:
                 selected_pixel.color = (255, 0, 0)
-            for pixel in self.pixels:
+            for i, pixel in enumerate(self.pixels):
                 if pixel != selected_pixel:
-                    self.move_pixel(p=pixel)
+                    self.move_pixel(p=pixel, p_index=i)
 
             # display
             self.update_display()
