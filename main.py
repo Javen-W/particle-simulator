@@ -58,6 +58,14 @@ class Game:
         self.frame = 0
         self.pixels = []
 
+        # todo temp random particles
+        for _ in range(50):
+            x, y = random.randint(50, 500), random.randint(50, 500)
+            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            velocity = Vector(magnitude=random.random() * self.pixel_size, direction=random.uniform(0, 2 * math.pi))
+            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, velocity=velocity)
+            self.pixels.append(p)
+
     def draw(self, p: Pixel):
         pygame.draw.rect(self.screen, p.color, p.rect)
 
@@ -105,22 +113,34 @@ class Game:
             p.velocity.direction = math.pi - p.velocity.direction
             p.velocity.magnitude *= self.elasticity
 
-    def run(self):
-        # todo temp random particles
-        for _ in range(50):
-            x, y = random.randint(50, 500), random.randint(50, 500)
-            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            velocity = Vector(magnitude=random.random() * self.pixel_size, direction=random.uniform(0, 2 * math.pi))
-            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, velocity=velocity)
-            self.pixels.append(p)
+    def find_pixel(self, x: int, y: int):
+        for p in self.pixels:
+            if math.hypot(p.rect.x - x, p.rect.y - y) <= p.width:
+                return p
+        return None
 
+    def run(self):
+        selected_pixel = None
         while self.frame < 1000:
+            # handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    (mouseX, mouseY) = pygame.mouse.get_pos()
+                    selected_pixel = self.find_pixel(x=mouseX, y=mouseY)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    selected_pixel = None
+
             # increment frame
             self.frame += 1
 
             # pixel actions
+            if selected_pixel:
+                selected_pixel.color = (255, 0, 0)
             for pixel in self.pixels:
-                self.move_pixel(p=pixel)
+                if pixel != selected_pixel:
+                    self.move_pixel(p=pixel)
 
             # display
             self.update_display()
