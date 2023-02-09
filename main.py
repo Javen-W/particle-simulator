@@ -50,6 +50,8 @@ class Game:
         self.pixel_size = 30
         self.fps_limit = 15
         self.gravity = Vector(magnitude=0.002, direction=math.pi)
+        self.drag = 0.999  # the loss in speed as a particle goes through the air
+        self.elasticity = 0.75  # the loss in speed as a particle collides
 
         # game vars
         self.screen = pygame.display.set_mode(self.screen_dimensions)
@@ -78,13 +80,16 @@ class Game:
     def move_pixel(self, p: Pixel):
         # initial movement
         p.move(v=self.gravity)
+        p.velocity.magnitude *= self.drag
 
         # check for collisions
         if p.rect.x >= self.screen_dimensions[0] - p.width or p.rect.x <= 0:
             p.velocity.direction = -p.velocity.direction
+            p.velocity.magnitude *= self.elasticity
 
         if p.rect.y >= self.screen_dimensions[1] - p.height or p.rect.y <= 0:
             p.velocity.direction = math.pi - p.velocity.direction
+            p.velocity.magnitude *= self.elasticity
 
     def run(self):
         # todo temp random particles
