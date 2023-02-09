@@ -48,8 +48,8 @@ class Game:
         # game constants
         self.screen_dimensions = 600, 600
         self.pixel_size = 30
-        self.fps_limit = 15
-        self.gravity = Vector(magnitude=0.002, direction=math.pi)
+        self.fps_limit = 30
+        self.gravity = Vector(magnitude=1.1, direction=math.pi)
         self.drag = 0.999  # the loss in speed as a particle goes through the air
         self.elasticity = 0.75  # the loss in speed as a particle collides
 
@@ -82,12 +82,26 @@ class Game:
         p.move(v=self.gravity)
         p.velocity.magnitude *= self.drag
 
-        # check for collisions
-        if p.rect.x >= self.screen_dimensions[0] - p.width or p.rect.x <= 0:
+        # check for wall collisions
+        if p.rect.x > self.screen_dimensions[0] - p.width:
+            # right wall
+            p.rect.x = 2 * (self.screen_dimensions[0] - p.width) - p.rect.x
+            p.velocity.direction = -p.velocity.direction
+            p.velocity.magnitude *= self.elasticity
+        elif p.rect.x < 0:
+            # left wall
+            p.rect.x = 0
             p.velocity.direction = -p.velocity.direction
             p.velocity.magnitude *= self.elasticity
 
-        if p.rect.y >= self.screen_dimensions[1] - p.height or p.rect.y <= 0:
+        if p.rect.y > self.screen_dimensions[1] - p.height:
+            # floor
+            p.rect.y = self.screen_dimensions[1] - p.height
+            p.velocity.direction = math.pi - p.velocity.direction
+            p.velocity.magnitude *= self.elasticity
+        elif p.rect.y < 0:
+            # ceiling
+            p.rect.y = p.height
             p.velocity.direction = math.pi - p.velocity.direction
             p.velocity.magnitude *= self.elasticity
 
