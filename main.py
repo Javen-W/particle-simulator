@@ -11,17 +11,17 @@ pygame.init()
 
 
 class Vector:
-    def __init__(self, angle, length):
-        self.angle = angle
-        self.length = length
+    def __init__(self, magnitude, direction):
+        self.magnitude = magnitude
+        self.direction = direction
 
     @staticmethod
     def add_vectors(v1, v2):
-        x = math.sin(v1.angle) * v1.length + math.sin(v2.angle) * v2.length
-        y = math.cos(v1.angle) * v1.length + math.cos(v2.angle) * v2.length
-        length = math.hypot(x, y)
+        x = math.sin(v1.direction) * v1.magnitude + math.sin(v2.direction) * v2.magnitude
+        y = math.cos(v1.direction) * v1.magnitude + math.cos(v2.direction) * v2.magnitude
+        magnitude = math.hypot(x, y)
         angle = 0.5 * math.pi - math.atan2(y, x)
-        return Vector(angle=angle, length=length)
+        return Vector(magnitude=magnitude, direction=angle)
 
 
 class Pixel:
