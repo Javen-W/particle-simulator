@@ -25,25 +25,22 @@ class Vector:
 
 
 class Pixel:
-    def __init__(self, color, x, y, width, height):
+    def __init__(self, color, x, y, width, height, angle, speed):
         self.color = color
         self.rect = pygame.Rect(
             x, y,
             width, height
         )
+        self.width = width
+        self.height = height
+        self.angle = angle
+        self.speed = speed
 
-    """
-    Moves the pixel by a given velocity vector (i.e., angle and speed).
-        Angle: the vector direction represented in radians
-        Speed: the vector magnitude represented in speed
-    """
-    def move(self, angle, speed):
-        dx = math.sin(angle) * speed
-        dy = -math.cos(angle) * speed
-        old_rect = self.rect
+    def move(self):
+        dx = math.sin(self.angle) * self.speed
+        dy = -math.cos(self.angle) * self.speed
         self.rect = self.rect.move(dx, dy)
-        print("moved pixel; old: {}, new: {}".format( (old_rect.x, old_rect.y ), (self.rect.x, self.rect.y)))
-        print("dx: {}, dy: {}\n".format(dx, dy))
+
 
 class Game:
     def __init__(self):
@@ -76,12 +73,25 @@ class Game:
         # update display
         pygame.display.flip()
 
+    def move_pixel(self, p: Pixel):
+        # initial movement
+        p.move()
+
+        # check for collisions
+        if p.rect.x >= self.screen_dimensions[0] - p.width or p.rect.x <= 0:
+            p.angle = -p.angle
+
+        if p.rect.y >= self.screen_dimensions[1] - p.height or p.rect.y <= 0:
+            p.angle = math.pi - p.angle
+
     def run(self):
         # todo temp random particles
-        for _ in range(30):
-            x, y = random.randint(0, self.screen_dimensions[0]), random.randint(0, self.screen_dimensions[0])
+        for _ in range(50):
+            x, y = random.randint(50, 500), random.randint(50, 500)
             color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size)
+            speed = random.random() * self.pixel_size
+            angle = random.uniform(0, 2 * math.pi)
+            p = Pixel(color=color, x=x, y=y, width=self.pixel_size, height=self.pixel_size, angle=angle, speed=speed)
             self.pixels.append(p)
 
         while self.frame < 1000:
@@ -89,11 +99,8 @@ class Game:
             self.frame += 1
 
             # pixel actions
-            # TODO temp random movement
             for pixel in self.pixels:
-                speed = random.random() * self.pixel_size
-                angle = random.uniform(0, 2 * math.pi)
-                pixel.move(angle=angle, speed=speed)
+                self.move_pixel(p=pixel)
 
             # display
             self.update_display()
